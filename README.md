@@ -71,3 +71,4 @@ The admin page supports:
 - Add admin reschedule/cancel endpoints
 - Store client history in a database
 - Add deposits or package logic if the business needs it
+# BigDawgz-Booking
