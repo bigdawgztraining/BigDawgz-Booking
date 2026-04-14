@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BigDawgz Booking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <div class="brand-mark">
+        <img src="/assets/bigdawgz-logo.png" alt="BigDawgz logo" />
+      </div>
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">BigDawgz Performance</p>
+          <h1>Train With Purpose. Book Your Session.</h1>
+          <p class="subhead">
+            Schedule your session today for yourself or your athlete. Choose your service,
+            pick a time, and lock in your spot.
+          </p>
+        </div>
+        <div class="hero-note">
+          <span>Serious about results? So are we.</span>
+        </div>
+      </section>
+
+      <section class="layout">
+        <form id="booking-form" class="panel">
+          <div class="step-header">
+            <p class="step-label">Step <span id="step-number">1</span> of 5</p>
+            <h2 id="step-title">Choose your service</h2>
+          </div>
+
+          <div id="step-content"></div>
+
+          <div class="actions">
+            <button type="button" id="back-button" class="button secondary" disabled>
+              Back
+            </button>
+            <button type="button" id="next-button" class="button primary">
+              Continue
+            </button>
+          </div>
+        </form>
+
+        <aside class="sidebar">
+          <div class="card hidden" id="summary-card">
+            <h3>Your current selection</h3>
+            <dl id="summary"></dl>
+          </div>
+
+          <div class="card">
+            <h3>Location</h3>
+            <p>30990 Wixom Rd, Wixom, MI 48393</p>
+            <p><a href="https://www.bigdawgztraining.com" target="_blank" rel="noreferrer">www.bigdawgztraining.com</a></p>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+  </html>

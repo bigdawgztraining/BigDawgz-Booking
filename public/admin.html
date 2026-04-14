@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BigDawgz Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell admin-auth-shell" id="admin-auth-shell">
+      <section class="panel admin-login-panel" id="admin-login-panel">
+        <div class="step-header">
+          <p class="step-label">Protected Access</p>
+          <h2>Admin Login</h2>
+        </div>
+        <p class="subhead admin-login-copy">
+          Enter the BigDawgz admin password to view bookings, reschedule sessions, and manage the calendar.
+        </p>
+        <div class="field full">
+          <label for="admin-password">Password</label>
+          <input id="admin-password" type="password" autocomplete="current-password" />
+        </div>
+        <div class="actions">
+          <p id="admin-login-status" class="admin-status"></p>
+          <button id="admin-login-button" class="button primary" type="button">Log In</button>
+        </div>
+      </section>
+    </main>
+
+    <main class="shell hidden" id="admin-shell">
+      <section class="hero admin-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">BigDawgz Admin</p>
+          <h1>Upcoming Bookings</h1>
+          <p class="subhead">
+            A simple live view of the shared BigDawgz calendar for the current week.
+          </p>
+        </div>
+        <div class="hero-note">
+          <span>Keep this page open for daily operations.</span>
+        </div>
+      </section>
+
+      <section class="layout admin-layout">
+        <section class="panel">
+          <div class="step-header">
+            <p class="step-label">Live Calendar View</p>
+            <h2>Bookings</h2>
+          </div>
+
+          <div class="admin-controls">
+            <div class="admin-week-nav">
+              <button id="previous-week" class="button secondary" type="button">← Previous Week</button>
+              <button id="current-week" class="button secondary" type="button">This Week</button>
+              <button id="next-week" class="button secondary" type="button">Next Week →</button>
+            </div>
+            <div class="admin-top-actions">
+              <button id="refresh-admin" class="button primary" type="button">Refresh</button>
+              <button id="admin-logout-button" class="button secondary" type="button">Log Out</button>
+            </div>
+          </div>
+
+          <div class="admin-week-status">
+            <p id="admin-week-label" class="admin-week-label">Loading week...</p>
+            <p id="admin-status" class="admin-status">Loading upcoming bookings...</p>
+          </div>
+
+          <div class="admin-search">
+            <div class="field full">
+              <label for="admin-search-input">Search clients, services, phone, or email</label>
+              <input id="admin-search-input" type="text" placeholder="Search Emma, Personal Training, pitching, phone, or email" />
+            </div>
+            <button id="admin-search-button" class="button secondary" type="button">Clear</button>
+          </div>
+
+          <div id="admin-bookings" class="admin-bookings"></div>
+
+          <div class="admin-bottom-nav">
+            <button id="previous-week-bottom" class="button secondary" type="button">← Previous Week</button>
+            <button id="back-to-top" class="button secondary" type="button">Back to Top</button>
+            <button id="next-week-bottom" class="button secondary" type="button">Upcoming Week →</button>
+          </div>
+        </section>
+
+        <aside class="sidebar">
+          <div class="card">
+            <h3>What this page is for</h3>
+            <ul>
+              <li>See upcoming bookings and manual calendar events in one place</li>
+              <li>Check who booked which session and when</li>
+              <li>Open the original Google Calendar event when needed</li>
+            </ul>
+          </div>
+
+          <div class="card">
+            <h3>Color Key</h3>
+            <div class="admin-legend">
+              <div class="admin-legend-item">
+                <span class="admin-legend-swatch legend-ladies-night"></span>
+                <span>Ladies Night</span>
+              </div>
+              <div class="admin-legend-item">
+                <span class="admin-legend-swatch legend-personal-training"></span>
+                <span>Personal Training</span>
+              </div>
+              <div class="admin-legend-item">
+                <span class="admin-legend-swatch legend-pitching"></span>
+                <span>Pitching / Baseball</span>
+              </div>
+              <div class="admin-legend-item">
+                <span class="admin-legend-swatch legend-speed-agility"></span>
+                <span>Speed & Agility</span>
+              </div>
+              <div class="admin-legend-item">
+                <span class="admin-legend-swatch legend-manual"></span>
+                <span>Manual Calendar Event</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Client History</h3>
+            <div id="history-summary" class="admin-history-summary">
+              <p class="admin-status">Search for a client or service to see history.</p>
+            </div>
+            <div id="history-results" class="admin-history-results"></div>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <div id="reschedule-modal" class="modal-shell hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="step-label">Admin Action</p>
+            <h2>Reschedule Booking</h2>
+          </div>
+          <button id="close-modal" class="admin-action-button" type="button">Close</button>
+        </div>
+
+        <div class="input-grid">
+          <div class="field">
+            <label for="reschedule-date">New Date</label>
+            <input id="reschedule-date" type="date" />
+          </div>
+          <div class="field">
+            <label for="reschedule-time">New Start Time</label>
+            <input id="reschedule-time" type="time" />
+          </div>
+        </div>
+
+        <div id="smart-slot-picker" class="smart-slot-picker"></div>
+
+        <div class="modal-footer">
+          <p id="modal-status" class="admin-status"></p>
+          <button id="save-reschedule" class="button primary" type="button">Save Changes</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="details-modal" class="modal-shell hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <p class="step-label">Booking Details</p>
+            <h2 id="details-title">Booking</h2>
+          </div>
+          <button id="close-details-modal" class="admin-action-button" type="button">Close</button>
+        </div>
+
+        <div id="details-meta" class="admin-meta"></div>
+
+        <div class="details-actions">
+          <button id="details-reschedule" class="admin-action-button" type="button">Reschedule</button>
+          <a id="details-email-action" class="admin-action-link hidden" href="#">Email</a>
+          <a id="details-text-action" class="admin-action-link hidden" href="#">Text</a>
+          <button id="details-completed" class="admin-action-button" type="button">Completed</button>
+          <button id="details-no-show" class="admin-action-button" type="button">No-Show</button>
+          <button id="details-cancel" class="admin-action-button admin-action-danger" type="button">Cancel</button>
+        </div>
+
+        <div class="details-toggle-row">
+          <span class="details-toggle-label">Waiver on file</span>
+          <label class="yes-no-toggle" for="details-waiver-toggle" aria-label="Waiver on file">
+            <span class="yes-no-toggle-text">No</span>
+            <input id="details-waiver-toggle" type="checkbox" />
+            <span class="yes-no-toggle-track"></span>
+            <span class="yes-no-toggle-text">Yes</span>
+          </label>
+        </div>
+
+        <div class="input-grid">
+          <div class="field">
+            <label for="details-service">Service</label>
+            <select id="details-service">
+              <option value="">Not selected</option>
+              <option value="personal-training">Personal Training</option>
+              <option value="pitching">Pitching / Baseball</option>
+              <option value="ladies-night">Ladies Night</option>
+              <option value="speed-agility-14-plus">Speed & Agility 14+</option>
+              <option value="speed-agility-8-13">Speed & Agility 8-13</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="details-client-name">Client Name</label>
+            <input id="details-client-name" type="text" />
+          </div>
+          <div class="field">
+            <label for="details-phone">Phone</label>
+            <input id="details-phone" type="text" />
+          </div>
+          <div class="field">
+            <label for="details-email">Email</label>
+            <input id="details-email" type="text" />
+          </div>
+        </div>
+
+        <div class="field full">
+          <label for="details-notes">Notes</label>
+          <textarea id="details-notes" placeholder="Add notes for this client or session"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <p id="details-status" class="admin-status"></p>
+          <button id="save-details-notes" class="button primary" type="button">Save Booking Details</button>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+          <h3>Client History</h3>
+          <div id="details-history-summary" class="admin-history-summary"></div>
+          <div id="details-history-results" class="admin-history-results"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/admin.js" type="module"></script>
+  </body>
+  </html>
