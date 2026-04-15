@@ -10,12 +10,14 @@ export async function sendBookingNotifications(
 ) {
   const results = await Promise.allSettled([
     sendBookingEmail(input),
-    sendBookingText(input)
+    sendBookingText(input),
+    sendBusinessBookingEmailAlert(input)
   ]);
 
   return {
     emailSent: results[0].status === "fulfilled",
-    textSent: results[1].status === "fulfilled"
+    textSent: results[1].status === "fulfilled",
+    businessAlertSent: results[2].status === "fulfilled"
   };
 }
 
@@ -27,12 +29,14 @@ export async function sendPackageBookingNotifications(
 ) {
   const results = await Promise.allSettled([
     sendPackageBookingEmail(input),
-    sendPackageBookingText(input)
+    sendPackageBookingText(input),
+    sendBusinessPackageBookingEmailAlert(input)
   ]);
 
   return {
     emailSent: results[0].status === "fulfilled",
-    textSent: results[1].status === "fulfilled"
+    textSent: results[1].status === "fulfilled",
+    businessAlertSent: results[2].status === "fulfilled"
   };
 }
 
@@ -162,20 +166,13 @@ async function sendPackageBookingEmail(
 }
 
 async function sendBookingText(input: BookingInput & { end: string }) {
-  const {
-    twilioAccountSid,
-    twilioAuthToken,
-    twilioFromNumber
-  } = config.notifications;
-
-  if (!twilioAccountSid || !twilioAuthToken || !twilioFromNumber || !input.customer.phone) {
+  const twilioClient = buildTwilioClient();
+  if (!twilioClient || !input.customer.phone) {
     return;
   }
 
-  const client = twilio(twilioAccountSid, twilioAuthToken);
-
-  await client.messages.create({
-    from: twilioFromNumber,
+  await twilioClient.messages.create({
+    from: config.notifications.twilioFromNumber,
     to: input.customer.phone,
     body: `BigDawgz booking confirmed: ${serviceTitle(input.service)} on ${formatDate(
       input.start
@@ -186,29 +183,94 @@ async function sendBookingText(input: BookingInput & { end: string }) {
 async function sendPackageBookingText(
   input: BookingInput & { sessions: Array<{ start: string; end: string }> }
 ) {
-  const {
-    twilioAccountSid,
-    twilioAuthToken,
-    twilioFromNumber
-  } = config.notifications;
-
-  if (!twilioAccountSid || !twilioAuthToken || !twilioFromNumber || !input.customer.phone) {
+  const twilioClient = buildTwilioClient();
+  if (!twilioClient || !input.customer.phone) {
     return;
   }
-
-  const client = twilio(twilioAccountSid, twilioAuthToken);
   const sortedSessions = input.sessions.slice().sort((a, b) => a.start.localeCompare(b.start));
   const firstSession = sortedSessions[0];
   const lastSession = sortedSessions[sortedSessions.length - 1];
 
-  await client.messages.create({
-    from: twilioFromNumber,
+  await twilioClient.messages.create({
+    from: config.notifications.twilioFromNumber,
     to: input.customer.phone,
     body: `BigDawgz package confirmed: ${sortedSessions.length} ${serviceTitle(
       input.service
     )} session${sortedSessions.length === 1 ? "" : "s"} booked starting ${formatDate(
       firstSession.start
     )}. Last scheduled session: ${formatDate(lastSession.start)}. ${config.business.address}. Need changes? Reply to this text or call/text ${config.business.phone}.`
+  });
+}
+
+async function sendBusinessBookingEmailAlert(input: BookingInput & { end: string }) {
+  if (!config.business.email) {
+    return;
+  }
+
+  const trainer = getTrainer(input.trainerId);
+  const clientName = `${input.customer.firstName} ${input.customer.lastName}`.trim();
+
+  await sendEmail({
+    to: config.business.email,
+    subject: `New BigDawgz Booking: ${serviceTitle(input.service)}`,
+    text: [
+      `A new booking was created.`,
+      "",
+      `Service: ${serviceTitle(input.service)}`,
+      `Client: ${clientName}`,
+      `Trainer: ${trainer.name}`,
+      `Date: ${formatDate(input.start)}`,
+      `Time: ${formatTimeRange(input.start, input.end)}`,
+      `Phone: ${input.customer.phone}`,
+      `Email: ${input.customer.email}`,
+      input.customer.athleteName ? `Athlete: ${input.customer.athleteName}` : "",
+      input.customer.age ? `Age: ${input.customer.age}` : "",
+      input.customer.notes ? `Notes: ${input.customer.notes}` : ""
+    ]
+      .filter(Boolean)
+      .join("\n")
+  });
+}
+
+async function sendBusinessPackageBookingEmailAlert(
+  input: BookingInput & { sessions: Array<{ start: string; end: string }> }
+) {
+  if (!config.business.email || !input.sessions.length) {
+    return;
+  }
+
+  const trainer = getTrainer(input.trainerId);
+  const clientName = `${input.customer.firstName} ${input.customer.lastName}`.trim();
+  const sortedSessions = input.sessions.slice().sort((a, b) => a.start.localeCompare(b.start));
+  const firstSession = sortedSessions[0];
+  const lastSession = sortedSessions[sortedSessions.length - 1];
+
+  await sendEmail({
+    to: config.business.email,
+    subject: `New BigDawgz Package Booking: ${serviceTitle(input.service)}`,
+    text: [
+      `A new package booking was created.`,
+      "",
+      `Service: ${serviceTitle(input.service)}`,
+      `Client: ${clientName}`,
+      `Trainer: ${trainer.name}`,
+      `Sessions booked: ${sortedSessions.length}`,
+      `First session: ${formatDate(firstSession.start)} from ${formatTimeRange(
+        firstSession.start,
+        firstSession.end
+      )}`,
+      `Last session: ${formatDate(lastSession.start)} from ${formatTimeRange(
+        lastSession.start,
+        lastSession.end
+      )}`,
+      `Phone: ${input.customer.phone}`,
+      `Email: ${input.customer.email}`,
+      input.customer.athleteName ? `Athlete: ${input.customer.athleteName}` : "",
+      input.customer.age ? `Age: ${input.customer.age}` : "",
+      input.customer.notes ? `Notes: ${input.customer.notes}` : ""
+    ]
+      .filter(Boolean)
+      .join("\n")
   });
 }
 
@@ -251,6 +313,20 @@ function buildTransporter() {
       pass: smtpPass
     }
   });
+}
+
+function buildTwilioClient() {
+  const {
+    twilioAccountSid,
+    twilioAuthToken,
+    twilioFromNumber
+  } = config.notifications;
+
+  if (!twilioAccountSid || !twilioAuthToken || !twilioFromNumber) {
+    return null;
+  }
+
+  return twilio(twilioAccountSid, twilioAuthToken);
 }
 
 function formatDate(start: string) {

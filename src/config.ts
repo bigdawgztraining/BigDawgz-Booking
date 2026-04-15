@@ -23,7 +23,8 @@ export const config = {
     address: "30990 Wixom Rd, Wixom, MI 48393",
     website: "https://www.bigdawgztraining.com",
     waiverUrl: process.env.WAIVER_URL ?? "",
-    phone: process.env.BUSINESS_PHONE ?? "305-812-6181"
+    phone: process.env.BUSINESS_PHONE ?? "305-812-6181",
+    email: process.env.BUSINESS_EMAIL ?? "BigDawgzTraining@gmail.com"
   },
   slotDurationMinutes: Number(process.env.SLOT_DURATION_MINUTES ?? 60),
   slotBufferMinutes: Number(process.env.SLOT_BUFFER_MINUTES ?? 10),
