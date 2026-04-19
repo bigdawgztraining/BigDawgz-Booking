@@ -1175,12 +1175,15 @@ dd {
   }
 
   .social-links {
-    justify-items: end;
+    position: absolute;
+    top: 20px;
+    left: 0;
+    justify-items: start;
     width: auto;
   }
 
   .social-icons {
-    justify-content: flex-end;
+    justify-content: flex-start;
     flex-direction: row;
     gap: 8px;
   }
