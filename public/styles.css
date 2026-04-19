@@ -71,6 +71,7 @@ body {
   display: grid;
   gap: 8px;
   justify-items: end;
+  width: 100%;
 }
 
 .social-label {
@@ -166,10 +167,8 @@ body {
 }
 
 .hero-note {
-  align-self: stretch;
   display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
+  align-items: stretch;
 }
 
 .hero-note span {
@@ -180,6 +179,8 @@ body {
   padding: 14px 18px;
   border-radius: 18px;
   font-weight: 600;
+  width: 100%;
+  text-align: center;
 }
 
 .layout {
@@ -1167,20 +1168,30 @@ dd {
     position: static;
     width: 100%;
     margin: 0 0 10px auto;
-    align-items: flex-end;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 16px;
   }
 
   .social-links {
-    justify-items: end;
+    justify-items: start;
+    width: auto;
   }
 
   .social-icons {
+    justify-content: flex-start;
     gap: 8px;
   }
 
   .social-link {
     width: 40px;
     height: 40px;
+  }
+
+  .social-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
   }
 
   .admin-search {
