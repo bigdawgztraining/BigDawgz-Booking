@@ -1167,21 +1167,25 @@ dd {
   .brand-mark {
     position: static;
     width: 100%;
-    margin: 0 0 10px auto;
-    align-items: center;
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 16px;
+    margin: 0 0 12px 0;
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 10px;
   }
 
   .social-links {
     justify-items: start;
-    width: auto;
+    width: 100%;
   }
 
   .social-icons {
     justify-content: flex-start;
     gap: 8px;
+  }
+
+  .brand-mark img {
+    width: 84px;
   }
 
   .social-link {
