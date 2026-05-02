@@ -324,6 +324,7 @@ export async function listAvailableSlots(input: {
   const slotLength = service.slotStepMinutes ?? duration;
   const slots: Array<{ start: string; end: string; label: string; spotsLeft?: number }> = [];
   const now = new Date();
+  const noticeCutoff = addMinutes(now, config.bookingNoticeHours * 60);
 
   for (const window of windows) {
     let current = zonedDateTime(input.date, window.start);
@@ -332,7 +333,7 @@ export async function listAvailableSlots(input: {
     while (isBefore(addMinutes(current, duration), addMinutes(endBoundary, 1))) {
       const slotEnd = addMinutes(current, duration);
 
-      if (current <= now) {
+      if (current <= noticeCutoff) {
         if (service.bookingMode === "group") {
           break;
         }

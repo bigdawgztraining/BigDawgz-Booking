@@ -404,7 +404,7 @@ async function loadSlots() {
       const nextAvailable = await findNextAvailableDate(formState.date, 21);
 
       if (!nextAvailable) {
-        slotMessage.textContent = "No open slots are available in the next few weeks.";
+        slotMessage.textContent = "No open slots are available in the next few weeks. Bookings require at least 24 hours notice.";
         return;
       }
 
@@ -412,7 +412,7 @@ async function loadSlots() {
       slots = nextAvailable.slots;
       formState.date = activeDate;
       dateInput.value = activeDate;
-      slotMessage.textContent = `No slots on the selected date. Showing the next available date: ${formatFriendlyDate(activeDate)}.`;
+      slotMessage.textContent = `No slots on the selected date. Bookings require at least 24 hours notice, so we are showing the next available date: ${formatFriendlyDate(activeDate)}.`;
     } else {
       slotMessage.textContent = slotStepHelperText(plan);
     }

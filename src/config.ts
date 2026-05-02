@@ -26,6 +26,7 @@ export const config = {
     phone: process.env.BUSINESS_PHONE ?? "305-812-6181",
     email: process.env.BUSINESS_EMAIL ?? "BigDawgzTraining@gmail.com"
   },
+  bookingNoticeHours: Number(process.env.BOOKING_NOTICE_HOURS ?? 24),
   slotDurationMinutes: Number(process.env.SLOT_DURATION_MINUTES ?? 60),
   slotBufferMinutes: Number(process.env.SLOT_BUFFER_MINUTES ?? 10),
   calendars: {
