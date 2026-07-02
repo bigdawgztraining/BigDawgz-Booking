@@ -187,9 +187,25 @@ function pitchingWeekendWindow(date: string) {
   return [{ start: "09:00", end: "21:00" }];
 }
 
+function isManualBlackoutDate(service: ServiceType, date: string) {
+  if (
+    (service === "pitching" || service === "personal-training") &&
+    date >= "2026-07-03" &&
+    date <= "2026-07-05"
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 function serviceWindow(service: ServiceType, date: string) {
   const serviceDefinition = getServiceDefinition(service);
   const weekday = weekdayNumber(date);
+
+  if (isManualBlackoutDate(service, date)) {
+    return [];
+  }
 
   if (service === "pitching" && isPitchingWeekend(date)) {
     return pitchingWeekendWindow(date);
@@ -200,6 +216,35 @@ function serviceWindow(service: ServiceType, date: string) {
 
 function zonedDateTime(date: string, time: string) {
   return fromZonedTime(`${date}T${time}:00`, config.timezone);
+}
+
+function parseEventBoundary(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  if (value.includes("T")) {
+    return new Date(value);
+  }
+
+  return fromZonedTime(`${value}T00:00:00`, config.timezone);
+}
+
+function eventOverlapsWindow(
+  event: CalendarEventShape,
+  startIso: string,
+  endIso: string
+) {
+  const eventStart = parseEventBoundary(event.start?.dateTime ?? event.start?.date);
+  const eventEnd = parseEventBoundary(event.end?.dateTime ?? event.end?.date);
+
+  if (!eventStart || !eventEnd) {
+    return true;
+  }
+
+  const windowStart = new Date(startIso);
+  const windowEnd = new Date(endIso);
+  return eventStart < windowEnd && eventEnd > windowStart;
 }
 
 export async function isTrainerAvailable(input: AvailabilityCheckInput): Promise<boolean> {
@@ -221,14 +266,20 @@ async function listEventsForWindow(input: {
   const trainer = getTrainer(input.trainerId);
   const response = await client.events.list({
     calendarId: trainer.calendarId,
-    timeMin: input.startIso,
-    timeMax: input.endIso,
+    // Query a wider range, then filter locally for actual overlap. This catches
+    // all-day and multi-day blocks that may start before the exact slot window.
+    timeMin: addMinutes(new Date(input.startIso), -7 * 24 * 60).toISOString(),
+    timeMax: addMinutes(new Date(input.endIso), 7 * 24 * 60).toISOString(),
     singleEvents: true,
     maxResults: 50,
     orderBy: "startTime"
   });
 
-  return (response.data.items ?? []).filter((event) => event.id !== input.ignoreEventId);
+  return (response.data.items ?? []).filter(
+    (event) =>
+      event.id !== input.ignoreEventId &&
+      eventOverlapsWindow(event, input.startIso, input.endIso)
+  );
 }
 
 async function getSlotStatus(input: {
