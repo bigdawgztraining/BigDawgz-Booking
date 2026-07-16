@@ -18,7 +18,10 @@ const searchInput = document.getElementById("admin-search-input");
 const searchButton = document.getElementById("admin-search-button");
 const blackoutStartDateInput = document.getElementById("blackout-start-date");
 const blackoutEndDateInput = document.getElementById("blackout-end-date");
-const blackoutServiceInput = document.getElementById("blackout-service");
+const blackoutServiceAllInput = document.getElementById("blackout-service-all");
+const blackoutServiceOptionInputs = Array.from(
+  document.querySelectorAll(".blackout-service-option")
+);
 const blackoutNoteInput = document.getElementById("blackout-note");
 const blackoutSaveButton = document.getElementById("blackout-save-button");
 const blackoutStatusNode = document.getElementById("blackout-status");
@@ -143,6 +146,10 @@ searchInput.addEventListener("input", async () => {
   historyResultsNode.innerHTML = "";
 });
 blackoutSaveButton.addEventListener("click", saveBlackout);
+blackoutServiceAllInput.addEventListener("change", syncBlackoutServiceSelection);
+blackoutServiceOptionInputs.forEach((input) => {
+  input.addEventListener("change", syncBlackoutServiceSelection);
+});
 
 closeModalButton.addEventListener("click", closeRescheduleModal);
 saveRescheduleButton.addEventListener("click", saveReschedule);
@@ -334,11 +341,16 @@ function renderBlackouts() {
 async function saveBlackout() {
   const startDate = blackoutStartDateInput.value;
   const endDate = blackoutEndDateInput.value;
-  const service = blackoutServiceInput.value;
+  const services = getSelectedBlackoutServices();
   const note = blackoutNoteInput.value.trim();
 
   if (!startDate || !endDate) {
     blackoutStatusNode.textContent = "Choose both a start and end date.";
+    return;
+  }
+
+  if (!services.length) {
+    blackoutStatusNode.textContent = "Choose at least one service to block.";
     return;
   }
 
@@ -353,7 +365,7 @@ async function saveBlackout() {
       body: JSON.stringify({
         startDate,
         endDate,
-        services: [service],
+        services,
         note
       })
     });
@@ -365,7 +377,7 @@ async function saveBlackout() {
 
     blackoutStartDateInput.value = "";
     blackoutEndDateInput.value = "";
-    blackoutServiceInput.value = "all";
+    resetBlackoutServiceSelection();
     blackoutNoteInput.value = "";
     blackoutStatusNode.textContent = "Blackout saved.";
     await Promise.all([loadBlackouts(), loadBookings()]);
@@ -565,6 +577,37 @@ function serviceLabel(service) {
     default:
       return service;
   }
+}
+
+function getSelectedBlackoutServices() {
+  if (blackoutServiceAllInput.checked) {
+    return ["all"];
+  }
+
+  return blackoutServiceOptionInputs
+    .filter((input) => input.checked)
+    .map((input) => input.value);
+}
+
+function resetBlackoutServiceSelection() {
+  blackoutServiceAllInput.checked = true;
+  blackoutServiceOptionInputs.forEach((input) => {
+    input.checked = false;
+  });
+}
+
+function syncBlackoutServiceSelection(event) {
+  const target = event?.target;
+
+  if (target === blackoutServiceAllInput && blackoutServiceAllInput.checked) {
+    blackoutServiceOptionInputs.forEach((input) => {
+      input.checked = false;
+    });
+    return;
+  }
+
+  const anySpecificChecked = blackoutServiceOptionInputs.some((input) => input.checked);
+  blackoutServiceAllInput.checked = !anySpecificChecked;
 }
 
 function updateWeekControls() {

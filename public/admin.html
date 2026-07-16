@@ -102,10 +102,6 @@
             <h3>Color Key</h3>
             <div class="admin-legend">
               <div class="admin-legend-item">
-                <span class="admin-legend-swatch legend-ladies-night"></span>
-                <span>Ladies Night</span>
-              </div>
-              <div class="admin-legend-item">
                 <span class="admin-legend-swatch legend-personal-training"></span>
                 <span>Personal Training</span>
               </div>
@@ -142,15 +138,29 @@
             </div>
 
             <div class="field full">
-              <label for="blackout-service">Service</label>
-              <select id="blackout-service">
-                <option value="all">All services</option>
-                <option value="personal-training">Personal Training</option>
-                <option value="pitching">Pitching / Baseball</option>
-                <option value="ladies-night">Ladies Night</option>
-                <option value="speed-agility-14-plus">Speed & Agility 14+</option>
-                <option value="speed-agility-8-13">Speed & Agility 8-13</option>
-              </select>
+              <label>Services to block</label>
+              <div class="admin-blackout-service-grid" id="blackout-service-grid">
+                <label class="admin-check-pill">
+                  <input id="blackout-service-all" type="checkbox" value="all" checked />
+                  <span>All services</span>
+                </label>
+                <label class="admin-check-pill">
+                  <input class="blackout-service-option" type="checkbox" value="personal-training" />
+                  <span>Personal Training</span>
+                </label>
+                <label class="admin-check-pill">
+                  <input class="blackout-service-option" type="checkbox" value="pitching" />
+                  <span>Pitching / Baseball</span>
+                </label>
+                <label class="admin-check-pill">
+                  <input class="blackout-service-option" type="checkbox" value="speed-agility-14-plus" />
+                  <span>Speed & Agility 14+</span>
+                </label>
+                <label class="admin-check-pill">
+                  <input class="blackout-service-option" type="checkbox" value="speed-agility-8-13" />
+                  <span>Speed & Agility 8-13</span>
+                </label>
+              </div>
             </div>
 
             <div class="field full">
@@ -247,7 +257,6 @@
               <option value="">Not selected</option>
               <option value="personal-training">Personal Training</option>
               <option value="pitching">Pitching / Baseball</option>
-              <option value="ladies-night">Ladies Night</option>
               <option value="speed-agility-14-plus">Speed & Agility 14+</option>
               <option value="speed-agility-8-13">Speed & Agility 8-13</option>
               <option value="other">Other</option>
