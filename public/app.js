@@ -50,12 +50,6 @@ const services = [
     durationMinutes: 60
   },
   {
-    id: "ladies-night",
-    title: "Ladies Night",
-    copy: "Tuesdays and Thursdays, 6 PM to 7 PM EST, 6 spots",
-    durationMinutes: 60
-  },
-  {
     id: "speed-agility-14-plus",
     title: "Speed & Agility 14+",
     copy: "Mondays and Wednesdays, 4 PM to 5 PM EST, 12 spots",
@@ -107,21 +101,6 @@ const planMap = {
       copy: "Choose 2 or more lessons now",
       selectionMode: "manual-flex",
       minSessions: 2
-    }
-  ],
-  "ladies-night": [
-    {
-      id: "drop-in",
-      title: "Drop-In",
-      copy: "Reserve one class spot",
-      selectionMode: "manual-fixed",
-      sessionCount: 1
-    },
-    {
-      id: "monthly",
-      title: "Monthly Sessions",
-      copy: "Reserve the next 4 weeks of classes",
-      selectionMode: "auto-monthly"
     }
   ],
   "speed-agility-14-plus": [

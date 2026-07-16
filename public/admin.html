@@ -125,6 +125,50 @@
           </div>
 
           <div class="card">
+            <h3>Blackout Dates</h3>
+            <p class="card-copy">
+              Block a date range for selected services when you are closed, traveling, or unavailable.
+            </p>
+
+            <div class="input-grid admin-blackout-grid">
+              <div class="field">
+                <label for="blackout-start-date">Start Date</label>
+                <input id="blackout-start-date" type="date" />
+              </div>
+              <div class="field">
+                <label for="blackout-end-date">End Date</label>
+                <input id="blackout-end-date" type="date" />
+              </div>
+            </div>
+
+            <div class="field full">
+              <label for="blackout-service">Service</label>
+              <select id="blackout-service">
+                <option value="all">All services</option>
+                <option value="personal-training">Personal Training</option>
+                <option value="pitching">Pitching / Baseball</option>
+                <option value="ladies-night">Ladies Night</option>
+                <option value="speed-agility-14-plus">Speed & Agility 14+</option>
+                <option value="speed-agility-8-13">Speed & Agility 8-13</option>
+              </select>
+            </div>
+
+            <div class="field full">
+              <label for="blackout-note">Note</label>
+              <input id="blackout-note" type="text" placeholder="Holiday weekend, travel, gym closure" />
+            </div>
+
+            <div class="admin-blackout-actions">
+              <p id="blackout-status" class="admin-status"></p>
+              <button id="blackout-save-button" class="button primary" type="button">Save Blackout</button>
+            </div>
+
+            <div id="blackout-list" class="admin-blackout-list">
+              <p class="admin-status">Loading blackout dates...</p>
+            </div>
+          </div>
+
+          <div class="card">
             <h3>Client History</h3>
             <div id="history-summary" class="admin-history-summary">
               <p class="admin-status">Search for a client or service to see history.</p>

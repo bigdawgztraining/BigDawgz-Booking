@@ -8,6 +8,11 @@ import { fromZonedTime } from "date-fns-tz";
 import { z } from "zod";
 import { config } from "./config.js";
 import {
+  createBlackout,
+  deleteBlackout,
+  listBlackouts
+} from "./blackoutStore.js";
+import {
   findClientRecord,
   setClientWaiverStatus,
   upsertClientRecord
@@ -522,6 +527,84 @@ app.get("/api/admin/search", requireAdminAuth, async (req, res, next) => {
       query,
       summary,
       results: enriched
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/admin/blackouts", requireAdminAuth, async (_req, res, next) => {
+  try {
+    const blackouts = await listBlackouts();
+    return res.json({
+      ok: true,
+      blackouts
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/admin/blackouts", requireAdminAuth, async (req, res, next) => {
+  try {
+    const input = z
+      .object({
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        services: z
+          .array(
+            z.enum([
+              "all",
+              "personal-training",
+              "pitching",
+              "ladies-night",
+              "speed-agility-14-plus",
+              "speed-agility-8-13"
+            ])
+          )
+          .min(1),
+        note: z.string().optional()
+      })
+      .parse(req.body);
+
+    if (input.endDate < input.startDate) {
+      return res.status(400).json({
+        ok: false,
+        message: "End date must be on or after the start date."
+      });
+    }
+
+    const blackout = await createBlackout(input);
+    return res.json({
+      ok: true,
+      blackout
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete("/api/admin/blackouts/:blackoutId", requireAdminAuth, async (req, res, next) => {
+  try {
+    const blackoutId = String(req.params.blackoutId ?? "");
+
+    if (!blackoutId) {
+      return res.status(400).json({
+        ok: false,
+        message: "blackoutId is required"
+      });
+    }
+
+    const removed = await deleteBlackout(blackoutId);
+    if (!removed) {
+      return res.status(404).json({
+        ok: false,
+        message: "Blackout not found."
+      });
+    }
+
+    return res.json({
+      ok: true
     });
   } catch (error) {
     next(error);

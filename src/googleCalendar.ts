@@ -2,6 +2,7 @@ import { google } from "googleapis";
 import { addMinutes, format, isBefore, parseISO } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { assertGoogleConfig, config } from "./config.js";
+import { isServiceBlackoutDate } from "./blackoutStore.js";
 import { getServiceDefinition, getTrainer, ServiceType, Trainer } from "./trainers.js";
 
 type AdminServiceType = ServiceType | "other";
@@ -187,25 +188,9 @@ function pitchingWeekendWindow(date: string) {
   return [{ start: "09:00", end: "21:00" }];
 }
 
-function isManualBlackoutDate(service: ServiceType, date: string) {
-  if (
-    (service === "pitching" || service === "personal-training") &&
-    date >= "2026-07-03" &&
-    date <= "2026-07-05"
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
 function serviceWindow(service: ServiceType, date: string) {
   const serviceDefinition = getServiceDefinition(service);
   const weekday = weekdayNumber(date);
-
-  if (isManualBlackoutDate(service, date)) {
-    return [];
-  }
 
   if (service === "pitching" && isPitchingWeekend(date)) {
     return pitchingWeekendWindow(date);
@@ -357,6 +342,10 @@ export async function listAvailableSlots(input: {
     !trainer.services.includes(input.service) ||
     !service.trainerIds.includes(trainer.id)
   ) {
+    return [];
+  }
+
+  if (await isServiceBlackoutDate(input.service, input.date)) {
     return [];
   }
 

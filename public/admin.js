@@ -16,6 +16,13 @@ const nextWeekBottomButton = document.getElementById("next-week-bottom");
 const backToTopButton = document.getElementById("back-to-top");
 const searchInput = document.getElementById("admin-search-input");
 const searchButton = document.getElementById("admin-search-button");
+const blackoutStartDateInput = document.getElementById("blackout-start-date");
+const blackoutEndDateInput = document.getElementById("blackout-end-date");
+const blackoutServiceInput = document.getElementById("blackout-service");
+const blackoutNoteInput = document.getElementById("blackout-note");
+const blackoutSaveButton = document.getElementById("blackout-save-button");
+const blackoutStatusNode = document.getElementById("blackout-status");
+const blackoutListNode = document.getElementById("blackout-list");
 const modalNode = document.getElementById("reschedule-modal");
 const closeModalButton = document.getElementById("close-modal");
 const saveRescheduleButton = document.getElementById("save-reschedule");
@@ -49,6 +56,7 @@ const detailsHistoryResultsNode = document.getElementById("details-history-resul
 let activeRescheduleBooking = null;
 let activeDetailsBooking = null;
 let allBookings = [];
+let blackoutRules = [];
 let weekOffset = 0;
 let searchMode = false;
 
@@ -61,6 +69,7 @@ adminPasswordInput.addEventListener("keydown", (event) => {
 adminLogoutButton.addEventListener("click", logoutAdmin);
 refreshButton.addEventListener("click", () => {
   const query = searchInput.value.trim();
+  loadBlackouts();
   if (query) {
     loadSearchResults(query);
     return;
@@ -133,6 +142,7 @@ searchInput.addEventListener("input", async () => {
     '<p class="admin-status">Click a booking to see that client history.</p>';
   historyResultsNode.innerHTML = "";
 });
+blackoutSaveButton.addEventListener("click", saveBlackout);
 
 closeModalButton.addEventListener("click", closeRescheduleModal);
 saveRescheduleButton.addEventListener("click", saveReschedule);
@@ -280,6 +290,114 @@ async function loadSearchResults(query) {
   }
 }
 
+async function loadBlackouts() {
+  blackoutStatusNode.textContent = "";
+  blackoutListNode.innerHTML = '<p class="admin-status">Loading blackout dates...</p>';
+
+  try {
+    const response = await fetch("/api/admin/blackouts");
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data.message || "Could not load blackout dates");
+    }
+
+    blackoutRules = data.blackouts ?? [];
+    renderBlackouts();
+  } catch (error) {
+    blackoutListNode.innerHTML = `<div class="message error">${error.message}</div>`;
+  }
+}
+
+function renderBlackouts() {
+  if (!blackoutRules.length) {
+    blackoutListNode.innerHTML = '<p class="admin-status">No blackout dates saved.</p>';
+    return;
+  }
+
+  blackoutListNode.innerHTML = blackoutRules
+    .map(
+      (entry) => `
+        <article class="admin-blackout-item">
+          <div>
+            <p class="admin-blackout-dates">${formatBlackoutDates(entry.startDate, entry.endDate)}</p>
+            <p class="admin-blackout-services">${formatBlackoutServices(entry.services)}</p>
+            ${entry.note ? `<p class="admin-blackout-note">${escapeHtml(entry.note)}</p>` : ""}
+          </div>
+          <button class="button secondary admin-blackout-delete" type="button" onclick="removeBlackout('${entry.id}')">Remove</button>
+        </article>
+      `
+    )
+    .join("");
+}
+
+async function saveBlackout() {
+  const startDate = blackoutStartDateInput.value;
+  const endDate = blackoutEndDateInput.value;
+  const service = blackoutServiceInput.value;
+  const note = blackoutNoteInput.value.trim();
+
+  if (!startDate || !endDate) {
+    blackoutStatusNode.textContent = "Choose both a start and end date.";
+    return;
+  }
+
+  blackoutStatusNode.textContent = "Saving blackout...";
+
+  try {
+    const response = await fetch("/api/admin/blackouts", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        startDate,
+        endDate,
+        services: [service],
+        note
+      })
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data.message || "Could not save blackout");
+    }
+
+    blackoutStartDateInput.value = "";
+    blackoutEndDateInput.value = "";
+    blackoutServiceInput.value = "all";
+    blackoutNoteInput.value = "";
+    blackoutStatusNode.textContent = "Blackout saved.";
+    await Promise.all([loadBlackouts(), loadBookings()]);
+  } catch (error) {
+    blackoutStatusNode.textContent = error.message;
+  }
+}
+
+async function removeBlackout(blackoutId) {
+  if (!window.confirm("Remove this blackout date range?")) {
+    return;
+  }
+
+  blackoutStatusNode.textContent = "Removing blackout...";
+
+  try {
+    const response = await fetch(`/api/admin/blackouts/${encodeURIComponent(blackoutId)}`, {
+      method: "DELETE"
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data.message || "Could not remove blackout");
+    }
+
+    blackoutStatusNode.textContent = "Blackout removed.";
+    await Promise.all([loadBlackouts(), loadBookings()]);
+  } catch (error) {
+    blackoutStatusNode.textContent = error.message;
+  }
+}
+
 async function bootAdmin() {
   try {
     const response = await fetch("/api/admin/session", {
@@ -289,7 +407,7 @@ async function bootAdmin() {
 
     if (response.ok && data.authenticated) {
       showAdminShell();
-      await loadBookings();
+      await Promise.all([loadBookings(), loadBlackouts()]);
       return;
     }
   } catch {
@@ -336,7 +454,7 @@ async function loginAdmin() {
     }
 
     showAdminShell();
-    await loadBookings();
+    await Promise.all([loadBookings(), loadBlackouts()]);
   } catch (error) {
     adminLoginStatusNode.textContent = error.message;
   }
@@ -416,6 +534,37 @@ function renderBookings(bookings) {
       `;
     })
     .join("");
+}
+
+function formatBlackoutDates(startDate, endDate) {
+  if (startDate === endDate) {
+    return formatDate(startDate);
+  }
+
+  return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+}
+
+function formatBlackoutServices(services) {
+  return services.map((service) => serviceLabel(service)).join(", ");
+}
+
+function serviceLabel(service) {
+  switch (service) {
+    case "all":
+      return "All services";
+    case "personal-training":
+      return "Personal Training";
+    case "pitching":
+      return "Pitching / Baseball";
+    case "ladies-night":
+      return "Ladies Night";
+    case "speed-agility-14-plus":
+      return "Speed & Agility 14+";
+    case "speed-agility-8-13":
+      return "Speed & Agility 8-13";
+    default:
+      return service;
+  }
 }
 
 function updateWeekControls() {
@@ -1107,5 +1256,7 @@ window.setAttendanceStatus = async (eventId, calendarId, status) => {
     statusNode.textContent = error.message;
   }
 };
+
+window.removeBlackout = removeBlackout;
 
 bootAdmin();

@@ -230,6 +230,12 @@ body {
   line-height: 1.7;
 }
 
+.card-copy {
+  margin: 0 0 16px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 a {
   color: var(--accent);
   text-decoration-color: rgba(245, 181, 59, 0.55);
@@ -1066,6 +1072,55 @@ dd {
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   flex: 0 0 16px;
+}
+
+.admin-blackout-grid {
+  margin-bottom: 14px;
+}
+
+.admin-blackout-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.admin-blackout-list {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.admin-blackout-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-blackout-dates,
+.admin-blackout-services,
+.admin-blackout-note {
+  margin: 0;
+}
+
+.admin-blackout-dates {
+  font-weight: 700;
+}
+
+.admin-blackout-services,
+.admin-blackout-note {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.admin-blackout-delete {
+  white-space: nowrap;
 }
 
 .legend-ladies-night {
