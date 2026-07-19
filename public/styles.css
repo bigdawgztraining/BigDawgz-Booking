@@ -1078,6 +1078,14 @@ dd {
   margin-bottom: 14px;
 }
 
+.admin-blackout-toggle-row {
+  margin-bottom: 14px;
+}
+
+.admin-blackout-time-grid {
+  margin-bottom: 14px;
+}
+
 .admin-blackout-service-grid {
   display: grid;
   gap: 10px;
@@ -1135,6 +1143,7 @@ dd {
 }
 
 .admin-blackout-dates,
+.admin-blackout-times,
 .admin-blackout-services,
 .admin-blackout-note {
   margin: 0;
@@ -1144,6 +1153,7 @@ dd {
   font-weight: 700;
 }
 
+.admin-blackout-times,
 .admin-blackout-services,
 .admin-blackout-note {
   color: var(--muted);

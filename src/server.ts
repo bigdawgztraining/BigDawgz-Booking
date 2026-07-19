@@ -551,13 +551,15 @@ app.post("/api/admin/blackouts", requireAdminAuth, async (req, res, next) => {
       .object({
         startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        allDay: z.boolean().default(true),
+        startTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+        endTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
         services: z
           .array(
             z.enum([
               "all",
               "personal-training",
               "pitching",
-              "ladies-night",
               "speed-agility-14-plus",
               "speed-agility-8-13"
             ])
@@ -572,6 +574,22 @@ app.post("/api/admin/blackouts", requireAdminAuth, async (req, res, next) => {
         ok: false,
         message: "End date must be on or after the start date."
       });
+    }
+
+    if (!input.allDay) {
+      if (!input.startTime || !input.endTime) {
+        return res.status(400).json({
+          ok: false,
+          message: "Start and end times are required for a timed blackout."
+        });
+      }
+
+      if (input.startTime >= input.endTime) {
+        return res.status(400).json({
+          ok: false,
+          message: "End time must be later than start time."
+        });
+      }
     }
 
     const blackout = await createBlackout(input);

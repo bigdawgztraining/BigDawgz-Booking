@@ -137,6 +137,27 @@
               </div>
             </div>
 
+            <div class="details-toggle-row admin-blackout-toggle-row">
+              <span class="details-toggle-label">All day blackout</span>
+              <label class="yes-no-toggle" for="blackout-all-day" aria-label="All day blackout">
+                <span class="yes-no-toggle-text">Timed</span>
+                <input id="blackout-all-day" type="checkbox" checked />
+                <span class="yes-no-toggle-track"></span>
+                <span class="yes-no-toggle-text">All Day</span>
+              </label>
+            </div>
+
+            <div class="input-grid admin-blackout-time-grid hidden" id="blackout-time-grid">
+              <div class="field">
+                <label for="blackout-start-time">Start Time</label>
+                <input id="blackout-start-time" type="time" />
+              </div>
+              <div class="field">
+                <label for="blackout-end-time">End Time</label>
+                <input id="blackout-end-time" type="time" />
+              </div>
+            </div>
+
             <div class="field full">
               <label>Services to block</label>
               <div class="admin-blackout-service-grid" id="blackout-service-grid">

@@ -2,7 +2,7 @@ import { google } from "googleapis";
 import { addMinutes, format, isBefore, parseISO } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { assertGoogleConfig, config } from "./config.js";
-import { isServiceBlackoutDate } from "./blackoutStore.js";
+import { isServiceBlackoutDate, isServiceBlackoutWindow } from "./blackoutStore.js";
 import { getServiceDefinition, getTrainer, ServiceType, Trainer } from "./trainers.js";
 
 type AdminServiceType = ServiceType | "other";
@@ -372,8 +372,26 @@ export async function listAvailableSlots(input: {
 
     while (isBefore(addMinutes(current, duration), addMinutes(endBoundary, 1))) {
       const slotEnd = addMinutes(current, duration);
+      const slotStartLabel = formatInTimeZone(current, config.timezone, "HH:mm");
+      const slotEndLabel = formatInTimeZone(slotEnd, config.timezone, "HH:mm");
 
       if (current <= noticeCutoff) {
+        if (service.bookingMode === "group") {
+          break;
+        }
+
+        current = addMinutes(current, slotLength);
+        continue;
+      }
+
+      const isBlackoutWindow = await isServiceBlackoutWindow({
+        service: input.service,
+        date: input.date,
+        startTime: slotStartLabel,
+        endTime: slotEndLabel
+      });
+
+      if (isBlackoutWindow) {
         if (service.bookingMode === "group") {
           break;
         }

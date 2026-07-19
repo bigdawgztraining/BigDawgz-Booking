@@ -9,6 +9,9 @@ export type BlackoutRecord = {
   id: string;
   startDate: string;
   endDate: string;
+  allDay: boolean;
+  startTime?: string;
+  endTime?: string;
   services: BlackoutService[];
   note?: string;
   createdAt: string;
@@ -25,6 +28,7 @@ const defaultBlackouts: BlackoutRecord[] = [
     id: "seed-july-3-5-2026",
     startDate: "2026-07-03",
     endDate: "2026-07-05",
+    allDay: true,
     services: ["personal-training", "pitching"],
     note: "Holiday closure",
     createdAt: "2026-07-02T00:00:00.000Z",
@@ -47,7 +51,14 @@ async function readBlackouts(): Promise<BlackoutRecord[]> {
   try {
     const raw = await readFile(blackoutStorePath, "utf8");
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.map((entry) => ({
+      ...entry,
+      allDay: entry.allDay ?? true
+    }));
   } catch {
     await writeBlackouts(defaultBlackouts);
     return [...defaultBlackouts];
@@ -71,6 +82,9 @@ export async function listBlackouts() {
 export async function createBlackout(input: {
   startDate: string;
   endDate: string;
+  allDay: boolean;
+  startTime?: string;
+  endTime?: string;
   services: BlackoutService[];
   note?: string;
 }) {
@@ -81,6 +95,9 @@ export async function createBlackout(input: {
     id: `blackout_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
     startDate: input.startDate,
     endDate: input.endDate,
+    allDay: input.allDay,
+    startTime: input.allDay ? undefined : input.startTime,
+    endTime: input.allDay ? undefined : input.endTime,
     services: input.services,
     note: input.note?.trim() || undefined,
     createdAt: now,
@@ -111,6 +128,34 @@ export async function isServiceBlackoutDate(service: ServiceType, date: string) 
     const matchesService =
       entry.services.includes("all") || entry.services.includes(service);
 
-    return matchesService && entry.startDate <= date && entry.endDate >= date;
+    return matchesService && entry.allDay !== false && entry.startDate <= date && entry.endDate >= date;
+  });
+}
+
+export async function isServiceBlackoutWindow(input: {
+  service: ServiceType;
+  date: string;
+  startTime: string;
+  endTime: string;
+}) {
+  const blackouts = await readBlackouts();
+
+  return blackouts.some((entry) => {
+    const matchesService =
+      entry.services.includes("all") || entry.services.includes(input.service);
+
+    if (!matchesService || entry.startDate > input.date || entry.endDate < input.date) {
+      return false;
+    }
+
+    if (entry.allDay) {
+      return true;
+    }
+
+    if (!entry.startTime || !entry.endTime) {
+      return true;
+    }
+
+    return entry.startTime < input.endTime && entry.endTime > input.startTime;
   });
 }

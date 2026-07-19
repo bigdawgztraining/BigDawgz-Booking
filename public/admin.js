@@ -18,6 +18,10 @@ const searchInput = document.getElementById("admin-search-input");
 const searchButton = document.getElementById("admin-search-button");
 const blackoutStartDateInput = document.getElementById("blackout-start-date");
 const blackoutEndDateInput = document.getElementById("blackout-end-date");
+const blackoutAllDayInput = document.getElementById("blackout-all-day");
+const blackoutTimeGrid = document.getElementById("blackout-time-grid");
+const blackoutStartTimeInput = document.getElementById("blackout-start-time");
+const blackoutEndTimeInput = document.getElementById("blackout-end-time");
 const blackoutServiceAllInput = document.getElementById("blackout-service-all");
 const blackoutServiceOptionInputs = Array.from(
   document.querySelectorAll(".blackout-service-option")
@@ -150,6 +154,7 @@ blackoutServiceAllInput.addEventListener("change", syncBlackoutServiceSelection)
 blackoutServiceOptionInputs.forEach((input) => {
   input.addEventListener("change", syncBlackoutServiceSelection);
 });
+blackoutAllDayInput.addEventListener("change", syncBlackoutTimeVisibility);
 
 closeModalButton.addEventListener("click", closeRescheduleModal);
 saveRescheduleButton.addEventListener("click", saveReschedule);
@@ -328,6 +333,7 @@ function renderBlackouts() {
         <article class="admin-blackout-item">
           <div>
             <p class="admin-blackout-dates">${formatBlackoutDates(entry.startDate, entry.endDate)}</p>
+            <p class="admin-blackout-times">${formatBlackoutTimes(entry)}</p>
             <p class="admin-blackout-services">${formatBlackoutServices(entry.services)}</p>
             ${entry.note ? `<p class="admin-blackout-note">${escapeHtml(entry.note)}</p>` : ""}
           </div>
@@ -341,6 +347,9 @@ function renderBlackouts() {
 async function saveBlackout() {
   const startDate = blackoutStartDateInput.value;
   const endDate = blackoutEndDateInput.value;
+  const allDay = blackoutAllDayInput.checked;
+  const startTime = blackoutStartTimeInput.value;
+  const endTime = blackoutEndTimeInput.value;
   const services = getSelectedBlackoutServices();
   const note = blackoutNoteInput.value.trim();
 
@@ -354,6 +363,18 @@ async function saveBlackout() {
     return;
   }
 
+  if (!allDay) {
+    if (!startTime || !endTime) {
+      blackoutStatusNode.textContent = "Choose both a start and end time.";
+      return;
+    }
+
+    if (startTime >= endTime) {
+      blackoutStatusNode.textContent = "End time must be later than start time.";
+      return;
+    }
+  }
+
   blackoutStatusNode.textContent = "Saving blackout...";
 
   try {
@@ -365,6 +386,9 @@ async function saveBlackout() {
       body: JSON.stringify({
         startDate,
         endDate,
+        allDay,
+        startTime: allDay ? undefined : startTime,
+        endTime: allDay ? undefined : endTime,
         services,
         note
       })
@@ -377,6 +401,10 @@ async function saveBlackout() {
 
     blackoutStartDateInput.value = "";
     blackoutEndDateInput.value = "";
+    blackoutAllDayInput.checked = true;
+    blackoutStartTimeInput.value = "";
+    blackoutEndTimeInput.value = "";
+    syncBlackoutTimeVisibility();
     resetBlackoutServiceSelection();
     blackoutNoteInput.value = "";
     blackoutStatusNode.textContent = "Blackout saved.";
@@ -556,6 +584,18 @@ function formatBlackoutDates(startDate, endDate) {
   return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 }
 
+function formatBlackoutTimes(entry) {
+  if (entry.allDay !== false) {
+    return "All day";
+  }
+
+  if (!entry.startTime || !entry.endTime) {
+    return "Timed blackout";
+  }
+
+  return `${formatClock(entry.startTime)} - ${formatClock(entry.endTime)}`;
+}
+
 function formatBlackoutServices(services) {
   return services.map((service) => serviceLabel(service)).join(", ");
 }
@@ -589,6 +629,10 @@ function getSelectedBlackoutServices() {
     .map((input) => input.value);
 }
 
+function syncBlackoutTimeVisibility() {
+  blackoutTimeGrid.classList.toggle("hidden", blackoutAllDayInput.checked);
+}
+
 function resetBlackoutServiceSelection() {
   blackoutServiceAllInput.checked = true;
   blackoutServiceOptionInputs.forEach((input) => {
@@ -608,6 +652,14 @@ function syncBlackoutServiceSelection(event) {
 
   const anySpecificChecked = blackoutServiceOptionInputs.some((input) => input.checked);
   blackoutServiceAllInput.checked = !anySpecificChecked;
+}
+
+function formatClock(value) {
+  const [hourText, minute] = String(value).split(":");
+  const hour = Number(hourText);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const normalizedHour = hour % 12 || 12;
+  return `${normalizedHour}:${minute} ${suffix}`;
 }
 
 function updateWeekControls() {
