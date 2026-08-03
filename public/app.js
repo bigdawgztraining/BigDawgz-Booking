@@ -166,11 +166,28 @@ const steps = [
   }
 ];
 
+function isPitchingWaitlistFlow() {
+  return formState.service === "pitching";
+}
+
+function displayStepNumber() {
+  if (!isPitchingWaitlistFlow()) {
+    return step + 1;
+  }
+
+  return step === 0 ? 1 : 2;
+}
+
 backButton.addEventListener("click", () => {
   if (step === 0) {
     return;
   }
-  step -= 1;
+
+  if (isPitchingWaitlistFlow() && step === steps.length - 1) {
+    step = 0;
+  } else {
+    step -= 1;
+  }
   render();
 });
 
@@ -184,7 +201,11 @@ nextButton.addEventListener("click", async () => {
     return;
   }
 
-  step += 1;
+  if (isPitchingWaitlistFlow() && step === 0) {
+    step = steps.length - 1;
+  } else {
+    step += 1;
+  }
   render();
 });
 
@@ -213,10 +234,8 @@ async function loadTrainers() {
 
 function render() {
   const current = steps[step];
-  stepNumber.textContent = String(step + 1);
-  stepTitle.textContent = current.title === "Pick your slot" && formState.service === "pitching"
-    ? "Join the waitlist"
-    : current.title;
+  stepNumber.textContent = String(displayStepNumber());
+  stepTitle.textContent = current.title;
   current.render();
   backButton.disabled = step === 0;
   nextButton.textContent =
@@ -675,17 +694,22 @@ function renderSummary() {
   const trainer = trainers.find((entry) => entry.id === formState.trainerId);
   const service = services.find((entry) => entry.id === formState.service);
   const plan = currentPlanDefinition();
-  summary.innerHTML = [
+  const rows = [
     summaryRow("Service", service?.title ?? "Not selected"),
-    summaryRow("Trainer", trainer?.name ?? "Not selected"),
-    summaryRow("Plan", plan?.title ?? formState.plan ?? "Not selected"),
-    summaryRow("Dates", formState.service === "pitching" ? "Waitlist signup" : selectedSessionsSummary()),
+    ...(!isPitchingWaitlistFlow()
+      ? [
+          summaryRow("Trainer", trainer?.name ?? "Not selected"),
+          summaryRow("Plan", plan?.title ?? formState.plan ?? "Not selected"),
+          summaryRow("Dates", selectedSessionsSummary())
+        ]
+      : [summaryRow("Status", "Waitlist signup")]),
     summaryRow(
       "Client",
       [formState.customer.firstName, formState.customer.lastName].filter(Boolean).join(" ") ||
         "Not entered"
     )
-  ].join("");
+  ];
+  summary.innerHTML = rows.join("");
 }
 
 function summaryRow(label, value) {
@@ -947,8 +971,8 @@ function escapeHtml(value) {
 window.selectService = (serviceId, durationMinutes) => {
   formState.service = serviceId;
   formState.durationMinutes = durationMinutes;
-  formState.trainerId = "";
-  formState.plan = "";
+  formState.trainerId = serviceId === "pitching" ? "jharel" : "";
+  formState.plan = serviceId === "pitching" ? "waitlist" : "";
   clearSelectedSlots();
   render();
 };
