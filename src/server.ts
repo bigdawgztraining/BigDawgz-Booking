@@ -36,9 +36,11 @@ import {
   sendBookingNotifications,
   sendPackageBookingNotifications,
   sendCancellationEmail,
-  sendRescheduleEmail
+  sendRescheduleEmail,
+  sendWaitlistNotifications
 } from "./notifications.js";
 import { trainers } from "./trainers.js";
+import { createWaitlistEntry } from "./waitlistStore.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -177,6 +179,21 @@ const batchBookingSchema = z.object({
   trainerId: z.string(),
   starts: z.array(z.string().datetime()).min(1).max(20),
   durationMinutes: z.number().min(30).max(180),
+  plan: z.string().min(1),
+  customer: z.object({
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    phone: z.string().min(7),
+    email: z.string().email(),
+    athleteName: z.string().optional(),
+    age: z.string().optional(),
+    notes: z.string().optional()
+  })
+});
+
+const waitlistSchema = z.object({
+  service: z.literal("pitching"),
+  trainerId: z.string(),
   plan: z.string().min(1),
   customer: z.object({
     firstName: z.string().min(1),
@@ -466,6 +483,47 @@ app.post("/api/bookings/batch", async (req: Request, res: Response, next: NextFu
     return res.status(201).json({
       ok: true,
       bookings: createdBookings,
+      notifications,
+      client: client
+        ? {
+            id: client.id,
+            waiverSigned: client.waiverSigned,
+            waiverSignedAt: client.waiverSignedAt
+          }
+        : null
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/waitlist", async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const input = waitlistSchema.parse(req.body);
+
+    const entry = await createWaitlistEntry({
+      service: input.service,
+      trainerId: input.trainerId as "jharel" | "nate-collins",
+      plan: input.plan,
+      customer: input.customer
+    });
+
+    const client = await upsertClientRecord({
+      firstName: input.customer.firstName,
+      lastName: input.customer.lastName,
+      customerName: `${input.customer.firstName} ${input.customer.lastName}`.trim(),
+      phone: input.customer.phone,
+      email: input.customer.email,
+      athleteName: input.customer.athleteName,
+      age: input.customer.age,
+      notes: input.customer.notes
+    });
+
+    const notifications = await sendWaitlistNotifications(input);
+
+    return res.status(201).json({
+      ok: true,
+      entry,
       notifications,
       client: client
         ? {

@@ -45,8 +45,8 @@ const services = [
   },
   {
     id: "pitching",
-    title: "Pitching / Baseball",
-    copy: "Mechanics, velocity, and development",
+    title: "Pitching / Baseball Waitlist",
+    copy: "Private lessons are currently full. Join the waitlist and we will reach out when a spot opens.",
     durationMinutes: 60
   },
   {
@@ -89,18 +89,10 @@ const planMap = {
   ],
   pitching: [
     {
-      id: "single-lesson",
-      title: "Single Lesson",
-      copy: "Book one pitching lesson",
-      selectionMode: "manual-fixed",
-      sessionCount: 1
-    },
-    {
-      id: "multiple-lessons",
-      title: "Schedule Multiple Lessons",
-      copy: "Choose 2 or more lessons now",
-      selectionMode: "manual-flex",
-      minSessions: 2
+      id: "waitlist",
+      title: "Join Waitlist",
+      copy: "Submit your info and we will reach out when a private lesson opens up",
+      selectionMode: "waitlist"
     }
   ],
   "speed-agility-14-plus": [
@@ -222,10 +214,17 @@ async function loadTrainers() {
 function render() {
   const current = steps[step];
   stepNumber.textContent = String(step + 1);
-  stepTitle.textContent = current.title;
+  stepTitle.textContent = current.title === "Pick your slot" && formState.service === "pitching"
+    ? "Join the waitlist"
+    : current.title;
   current.render();
   backButton.disabled = step === 0;
-  nextButton.textContent = step === steps.length - 1 ? "Confirm Booking" : "Continue";
+  nextButton.textContent =
+    step === steps.length - 1
+      ? formState.service === "pitching"
+        ? "Join Waitlist"
+        : "Confirm Booking"
+      : "Continue";
   nextButton.disabled = !current.valid();
   renderSummary();
 }
@@ -275,6 +274,19 @@ function renderPlanStep() {
 }
 
 function renderSlotStep() {
+  if (formState.service === "pitching") {
+    stepContent.innerHTML = `
+      <div class="message">
+        Private pitching lessons are currently full. Join the waitlist and we will reach out as soon as a one-on-one spot opens.
+      </div>
+      <div class="card" style="margin-top: 18px;">
+        <h3>How the waitlist works</h3>
+        <p>Submit your information on the next step and we will contact you when a private lesson becomes available.</p>
+      </div>
+    `;
+    return;
+  }
+
   const defaultDate = formState.date || todayLocal();
   const plan = currentPlanDefinition();
   const helperCopy = slotStepHelperText(plan);
@@ -667,7 +679,7 @@ function renderSummary() {
     summaryRow("Service", service?.title ?? "Not selected"),
     summaryRow("Trainer", trainer?.name ?? "Not selected"),
     summaryRow("Plan", plan?.title ?? formState.plan ?? "Not selected"),
-    summaryRow("Dates", selectedSessionsSummary()),
+    summaryRow("Dates", formState.service === "pitching" ? "Waitlist signup" : selectedSessionsSummary()),
     summaryRow(
       "Client",
       [formState.customer.firstName, formState.customer.lastName].filter(Boolean).join(" ") ||
@@ -767,6 +779,10 @@ function slotStepValid() {
     return false;
   }
 
+  if (plan.selectionMode === "waitlist") {
+    return true;
+  }
+
   if (plan.selectionMode === "manual-fixed") {
     return formState.selectedSlots.length === plan.sessionCount;
   }
@@ -800,30 +816,68 @@ async function submitBooking() {
   }
 
   nextButton.disabled = true;
-  nextButton.textContent = "Booking...";
+  nextButton.textContent = formState.service === "pitching" ? "Joining..." : "Booking...";
 
   try {
-    const response = await fetch(
-      formState.selectedSlots.length > 1 ? "/api/bookings/batch" : "/api/bookings",
-      {
+    const endpoint =
+      formState.service === "pitching"
+        ? "/api/waitlist"
+        : formState.selectedSlots.length > 1
+          ? "/api/bookings/batch"
+          : "/api/bookings";
+    const payload =
+      formState.service === "pitching"
+        ? {
+            service: formState.service,
+            trainerId: formState.trainerId,
+            plan: formState.plan,
+            customer: formState.customer
+          }
+        : {
+            service: formState.service,
+            trainerId: formState.trainerId,
+            start: formState.selectedSlots[0].start,
+            starts: formState.selectedSlots.map((slot) => slot.start),
+            durationMinutes: formState.durationMinutes,
+            plan: formState.plan,
+            customer: formState.customer
+          };
+
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        service: formState.service,
-        trainerId: formState.trainerId,
-        start: formState.selectedSlots[0].start,
-        starts: formState.selectedSlots.map((slot) => slot.start),
-        durationMinutes: formState.durationMinutes,
-        plan: formState.plan,
-        customer: formState.customer
-      })
+      body: JSON.stringify(payload)
     });
 
     const data = await response.json();
     if (!response.ok || !data.ok) {
       throw new Error(data.message || "Booking failed");
+    }
+
+    if (formState.service === "pitching") {
+      stepContent.innerHTML = `
+        <div class="message success">
+          Waitlist confirmed. We will reach out as soon as a private pitching lesson opens up.
+        </div>
+        <div class="card" style="margin-top: 18px;">
+          <h3>You're on the list</h3>
+          <p>Your pitching waitlist signup has been received.</p>
+          <p><strong>Location:</strong> ${businessInfo.address}</p>
+          ${
+            businessInfo.waiverUrl
+              ? `<p><strong>Waiver:</strong> Want to get ahead? <a href="${businessInfo.waiverUrl}" target="_blank" rel="noreferrer">Complete your waiver here</a>.</p>`
+              : ""
+          }
+          <div class="actions" style="margin-top: 18px; padding-top: 16px;">
+            <button type="button" class="button primary" onclick="bookAnotherSession()">Back to Main Booking</button>
+          </div>
+        </div>
+      `;
+      nextButton.style.display = "none";
+      backButton.style.display = "none";
+      return;
     }
 
     const confirmedSlots = (data.bookings ?? formState.selectedSlots).map((booking, index) => ({
@@ -874,7 +928,7 @@ async function submitBooking() {
       `<div class="message error" style="margin-top: 18px;">${error.message}</div>`
     );
     nextButton.disabled = false;
-    nextButton.textContent = "Confirm Booking";
+    nextButton.textContent = formState.service === "pitching" ? "Join Waitlist" : "Confirm Booking";
   }
 }
 

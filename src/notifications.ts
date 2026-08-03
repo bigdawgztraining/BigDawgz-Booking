@@ -40,6 +40,20 @@ export async function sendPackageBookingNotifications(
   };
 }
 
+export async function sendWaitlistNotifications(
+  input: Pick<BookingInput, "service" | "trainerId" | "plan" | "customer">
+) {
+  const results = await Promise.allSettled([
+    sendWaitlistEmail(input),
+    sendBusinessWaitlistEmailAlert(input)
+  ]);
+
+  return {
+    emailSent: results[0].status === "fulfilled",
+    businessAlertSent: results[1].status === "fulfilled"
+  };
+}
+
 export async function sendCancellationEmail(booking: AdminBooking) {
   if (!booking.email) {
     return { emailSent: false };
@@ -263,6 +277,67 @@ async function sendBusinessPackageBookingEmailAlert(
         lastSession.start,
         lastSession.end
       )}`,
+      `Phone: ${input.customer.phone}`,
+      `Email: ${input.customer.email}`,
+      input.customer.athleteName ? `Athlete: ${input.customer.athleteName}` : "",
+      input.customer.age ? `Age: ${input.customer.age}` : "",
+      input.customer.notes ? `Notes: ${input.customer.notes}` : ""
+    ]
+      .filter(Boolean)
+      .join("\n")
+  });
+}
+
+async function sendWaitlistEmail(
+  input: Pick<BookingInput, "service" | "trainerId" | "plan" | "customer">
+) {
+  const trainer = getTrainer(input.trainerId);
+  const fullName = `${input.customer.firstName} ${input.customer.lastName}`.trim();
+
+  await sendEmail({
+    to: input.customer.email,
+    subject: `BigDawgz Waitlist Confirmed: ${serviceTitle(input.service)}`,
+    text: [
+      `Hi ${fullName},`,
+      "",
+      `You're on the waitlist for ${serviceTitle(input.service)}.`,
+      `Trainer: ${trainer.name}`,
+      "",
+      "Private pitching lessons are currently full, but we will reach out as soon as a spot opens.",
+      `Location: ${config.business.address}`,
+      `Website: ${config.business.website}`,
+      config.business.waiverUrl
+        ? `Waiver link: ${config.business.waiverUrl}`
+        : "",
+      "",
+      `Questions? Reply to this email or text us at ${config.business.phone}.`,
+      "",
+      config.business.name
+    ]
+      .filter(Boolean)
+      .join("\n")
+  });
+}
+
+async function sendBusinessWaitlistEmailAlert(
+  input: Pick<BookingInput, "service" | "trainerId" | "plan" | "customer">
+) {
+  if (!config.business.email) {
+    return;
+  }
+
+  const trainer = getTrainer(input.trainerId);
+  const clientName = `${input.customer.firstName} ${input.customer.lastName}`.trim();
+
+  await sendEmail({
+    to: config.business.email,
+    subject: `New BigDawgz Waitlist Signup: ${serviceTitle(input.service)}`,
+    text: [
+      "A new waitlist signup was created.",
+      "",
+      `Service: ${serviceTitle(input.service)}`,
+      `Client: ${clientName}`,
+      `Trainer: ${trainer.name}`,
       `Phone: ${input.customer.phone}`,
       `Email: ${input.customer.email}`,
       input.customer.athleteName ? `Athlete: ${input.customer.athleteName}` : "",
