@@ -1164,6 +1164,48 @@ dd {
   white-space: nowrap;
 }
 
+.admin-waitlist-results {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.admin-waitlist-card {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.admin-waitlist-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.admin-waitlist-date,
+.admin-waitlist-service,
+.admin-waitlist-card p {
+  margin: 0;
+}
+
+.admin-waitlist-date,
+.admin-waitlist-service,
+.admin-waitlist-card p:not(:first-of-type) {
+  color: var(--muted);
+}
+
+.admin-waitlist-card h4 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+
+.admin-waitlist-card p + p {
+  margin-top: 6px;
+}
+
 .legend-ladies-night {
   background: #ff6bb3;
 }

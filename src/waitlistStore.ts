@@ -46,6 +46,11 @@ async function writeWaitlist(entries: WaitlistEntry[]) {
   await writeFile(waitlistStorePath, JSON.stringify(entries, null, 2), "utf8");
 }
 
+export async function listWaitlistEntries() {
+  const entries = await readWaitlist();
+  return entries.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
 export async function createWaitlistEntry(input: Omit<WaitlistEntry, "id" | "createdAt">) {
   const entries = await readWaitlist();
   const entry: WaitlistEntry = {

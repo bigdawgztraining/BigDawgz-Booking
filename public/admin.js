@@ -39,6 +39,8 @@ const rescheduleTimeInput = document.getElementById("reschedule-time");
 const smartSlotPicker = document.getElementById("smart-slot-picker");
 const historySummaryNode = document.getElementById("history-summary");
 const historyResultsNode = document.getElementById("history-results");
+const waitlistStatusNode = document.getElementById("waitlist-status");
+const waitlistResultsNode = document.getElementById("waitlist-results");
 const detailsModalNode = document.getElementById("details-modal");
 const closeDetailsModalButton = document.getElementById("close-details-modal");
 const detailsTitleNode = document.getElementById("details-title");
@@ -77,6 +79,7 @@ adminLogoutButton.addEventListener("click", logoutAdmin);
 refreshButton.addEventListener("click", () => {
   const query = searchInput.value.trim();
   loadBlackouts();
+  loadWaitlist();
   if (query) {
     loadSearchResults(query);
     return;
@@ -321,6 +324,61 @@ async function loadBlackouts() {
   }
 }
 
+async function loadWaitlist() {
+  waitlistStatusNode.textContent = "Loading waitlist...";
+  waitlistResultsNode.innerHTML = "";
+
+  try {
+    const response = await fetch("/api/admin/waitlist");
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data.message || "Could not load waitlist");
+    }
+
+    const entries = data.entries ?? [];
+    if (!entries.length) {
+      waitlistStatusNode.textContent = "No one is on the pitching waitlist right now.";
+      return;
+    }
+
+    waitlistStatusNode.textContent = `${entries.length} waitlist entr${entries.length === 1 ? "y" : "ies"} loaded.`;
+    waitlistResultsNode.innerHTML = entries
+      .map(
+        (entry) => `
+          <article class="admin-waitlist-card">
+            <div class="admin-waitlist-top">
+              <p class="admin-waitlist-date">Joined ${formatDateTime(entry.createdAt)}</p>
+              <span class="admin-status-pill status-scheduled">Waitlist</span>
+            </div>
+            <h4>${escapeHtml(`${entry.customer.firstName} ${entry.customer.lastName}`.trim())}</h4>
+            <p class="admin-waitlist-service">${escapeHtml(serviceLabel(entry.service))}</p>
+            <p>${escapeHtml(entry.customer.phone || "-")}</p>
+            <p>${escapeHtml(entry.customer.email || "-")}</p>
+            ${
+              entry.customer.athleteName
+                ? `<p><strong>Athlete:</strong> ${escapeHtml(entry.customer.athleteName)}</p>`
+                : ""
+            }
+            ${
+              entry.customer.age
+                ? `<p><strong>Age:</strong> ${escapeHtml(entry.customer.age)}</p>`
+                : ""
+            }
+            ${
+              entry.customer.notes
+                ? `<p><strong>Notes:</strong> ${escapeHtml(entry.customer.notes)}</p>`
+                : ""
+            }
+          </article>
+        `
+      )
+      .join("");
+  } catch (error) {
+    waitlistStatusNode.textContent = error.message;
+  }
+}
+
 function renderBlackouts() {
   if (!blackoutRules.length) {
     blackoutListNode.innerHTML = '<p class="admin-status">No blackout dates saved.</p>';
@@ -447,7 +505,7 @@ async function bootAdmin() {
 
     if (response.ok && data.authenticated) {
       showAdminShell();
-      await Promise.all([loadBookings(), loadBlackouts()]);
+      await Promise.all([loadBookings(), loadBlackouts(), loadWaitlist()]);
       return;
     }
   } catch {
@@ -494,7 +552,7 @@ async function loginAdmin() {
     }
 
     showAdminShell();
-    await Promise.all([loadBookings(), loadBlackouts()]);
+    await Promise.all([loadBookings(), loadBlackouts(), loadWaitlist()]);
   } catch (error) {
     adminLoginStatusNode.textContent = error.message;
   }
@@ -582,6 +640,16 @@ function formatBlackoutDates(startDate, endDate) {
   }
 
   return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+}
+
+function formatDateTime(value) {
+  return new Date(value).toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
 }
 
 function formatBlackoutTimes(entry) {

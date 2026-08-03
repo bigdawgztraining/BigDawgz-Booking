@@ -40,7 +40,7 @@ import {
   sendWaitlistNotifications
 } from "./notifications.js";
 import { trainers } from "./trainers.js";
-import { createWaitlistEntry } from "./waitlistStore.js";
+import { createWaitlistEntry, listWaitlistEntries } from "./waitlistStore.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -585,6 +585,18 @@ app.get("/api/admin/search", requireAdminAuth, async (req, res, next) => {
       query,
       summary,
       results: enriched
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/admin/waitlist", requireAdminAuth, async (_req, res, next) => {
+  try {
+    const entries = await listWaitlistEntries();
+    return res.json({
+      ok: true,
+      entries
     });
   } catch (error) {
     next(error);
