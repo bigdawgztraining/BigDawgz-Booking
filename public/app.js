@@ -973,19 +973,26 @@ window.selectService = (serviceId, durationMinutes) => {
   formState.durationMinutes = durationMinutes;
   formState.trainerId = serviceId === "pitching" ? "jharel" : "";
   formState.plan = serviceId === "pitching" ? "waitlist" : "";
+  formState.date = "";
   clearSelectedSlots();
+  step = serviceId === "pitching" ? steps.length - 1 : 1;
   render();
 };
 
 window.selectTrainer = (trainerId) => {
   formState.trainerId = trainerId;
+  formState.plan = "";
+  formState.date = "";
   clearSelectedSlots();
+  step = 2;
   render();
 };
 
 window.selectPlan = (planId) => {
   formState.plan = planId;
+  formState.date = "";
   clearSelectedSlots();
+  step = 3;
   render();
 };
 
