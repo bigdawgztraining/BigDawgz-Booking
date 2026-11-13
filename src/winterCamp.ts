@@ -28,7 +28,9 @@ type Booking = z.infer<typeof bookingInput> & {
   createdAt: string;
 };
 const directory = process.env.WINTER_CAMP_DATA_DIR ??
-  fileURLToPath(new URL("../data/winter-camp/", import.meta.url));
+  (process.env.RENDER === "true"
+    ? "/var/data/winter-camp"
+    : fileURLToPath(new URL("../data/winter-camp/", import.meta.url)));
 
 function bookingPath(id: string) {
   return path.join(directory, id + ".json");
