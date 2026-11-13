@@ -42,6 +42,8 @@ import {
 import { trainers } from "./trainers.js";
 import { createWaitlistEntry, listWaitlistEntries } from "./waitlistStore.js";
 
+import { listCampBookings, winterCampRouter } from "./winterCamp.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -999,6 +1001,20 @@ app.get("/api/admin/reschedule-slots", requireAdminAuth, async (req, res, next) 
   } catch (error) {
     next(error);
   }
+});
+
+app.use("/api/winter-camp", winterCampRouter);
+
+app.get("/api/admin/winter-camp", requireAdminAuth, async (_req, res, next) => {
+  try {
+    res.set("Cache-Control", "no-store").json(await listCampBookings());
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/winter-camp", (_req, res) => {
+  res.sendFile(path.resolve(__dirname, "../public/winter-camp.html"));
 });
 
 app.get("/admin", (_req, res) => {

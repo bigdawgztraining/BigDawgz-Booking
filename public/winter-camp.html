@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Winter Camp | BigDawgz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/winter-camp.js" defer></script>
+  </head>
+  <body>
+    <main class="shell camp-shell">
+      <div class="brand-mark">
+        <a href="/" aria-label="BigDawgz booking home"><img src="/assets/bigdawgz-logo.png" alt="BigDawgz" /></a>
+      </div>
+      <header class="hero">
+        <div>
+          <p class="eyebrow">December 2026</p>
+          <h1>BigDawgz Winter Camp</h1>
+          <p class="subhead">Choose your athlete’s age group and book one or both camp dates.</p>
+        </div>
+      </header>
+      <form id="camp-form" class="panel camp-panel">
+        <div class="step-header">
+          <p class="step-label">Step <span id="camp-step-number">1</span> of 3</p>
+          <h2 id="camp-step-title" tabindex="-1">Choose your age group</h2>
+        </div>
+        <label id="camp-group" class="field">Age group
+          <select name="group" required disabled>
+            <option value="">Choose an age group</option>
+          </select>
+        </label>
+        <fieldset id="camp-dates" hidden>
+          <legend>Camp dates</legend>
+          <div id="camp-date-options" class="input-grid"></div>
+        </fieldset>
+        <div id="camp-details" class="input-grid" hidden>
+          <label class="field">Athlete name <input name="athlete" maxlength="120" required /></label>
+          <label class="field">Parent or guardian name <input name="guardian" maxlength="120" autocomplete="name" required /></label>
+          <label class="field">Parent or guardian phone number <input name="phone" type="tel" maxlength="40" autocomplete="tel" required /></label>
+          <label class="field">Parent or guardian email <input name="email" type="email" maxlength="254" autocomplete="email" required /></label>
+        </div>
+        <p id="camp-total" aria-live="polite">$115 per session</p>
+        <div class="actions">
+          <button id="camp-back" class="button secondary" type="button" disabled>Back</button>
+          <button class="button primary" type="submit" disabled>Continue</button>
+        </div>
+      </form>
+      <section class="panel camp-panel" id="camp-confirmation" hidden aria-labelledby="camp-confirmation-title">
+        <h2 id="camp-confirmation-title" tabindex="-1">Your camp booking is saved</h2>
+        <p id="camp-booked-dates"></p>
+        <p id="camp-booked-total"></p>
+        <div id="camp-payment" class="actions">
+          <button class="button primary" type="button" value="venmo">Pay now with Venmo</button>
+          <button class="button secondary" type="button" value="cash">Pay cash on camp day</button>
+        </div>
+        <p id="camp-payment-result" aria-live="polite"></p>
+        <div><a class="button primary camp-link" id="camp-venmo" href="https://venmo.com/u/Jharel-Cotton" target="_blank" rel="noopener noreferrer" hidden>Open Venmo</a></div>
+      </section>
+      <p id="camp-status" role="status"></p>
+    </main>
+  </body>
+</html>

@@ -1423,3 +1423,46 @@ window.setAttendanceStatus = async (eventId, calendarId, status) => {
 window.removeBlackout = removeBlackout;
 
 bootAdmin();
+
+const campRoster = document.querySelector(".camp-roster");
+const campRosterResults = document.querySelector("#camp-roster-results");
+
+async function loadCampRoster() {
+  campRosterResults.textContent = "Loading camp bookings…";
+  try {
+    const response = await fetch("/api/admin/winter-camp");
+    if (!response.ok) throw new Error("Couldn’t load camp bookings.");
+    const bookings = await response.json();
+    if (!bookings.length) {
+      campRosterResults.textContent = "No camp bookings yet.";
+      return;
+    }
+    const list = document.createElement("ul");
+    const paymentLabels = { venmo: "Venmo selected", cash: "Cash on camp day" };
+    const dateFormat = new Intl.DateTimeFormat("en-US", {
+      month: "short", day: "numeric", timeZone: "UTC"
+    });
+    for (const booking of bookings) {
+      const item = document.createElement("li");
+      const dates = booking.dates.map(date => dateFormat.format(new Date(date))).join(", ");
+      item.textContent = [
+        booking.athlete,
+        booking.group,
+        dates,
+        booking.guardian + " (" + [booking.phone, booking.email].filter(Boolean).join(", ") + ")",
+        paymentLabels[booking.payment] || "Payment choice pending"
+      ].join(" · ");
+      list.append(item);
+    }
+    campRosterResults.replaceChildren(list);
+  } catch (error) {
+    campRosterResults.textContent = error.message;
+  }
+}
+
+campRoster.addEventListener("toggle", () => {
+  if (campRoster.open) void loadCampRoster();
+  else campRosterResults.replaceChildren();
+});
+document.querySelector("#refresh-camp-roster").addEventListener("click", loadCampRoster);
+adminLogoutButton.addEventListener("click", () => { campRoster.open = false; });

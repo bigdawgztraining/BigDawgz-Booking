@@ -1695,3 +1695,21 @@ dd {
     gap: 10px;
   }
 }
+
+.camp-shell { max-width: 820px; }
+.camp-panel { display: grid; gap: 20px; }
+.camp-panel[hidden], .camp-link[hidden] { display: none; }
+.camp-panel h2, .camp-panel p { margin: 0; }
+.camp-panel fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+.camp-panel legend { margin-bottom: 8px; }
+.camp-panel select { color-scheme: dark; }
+.camp-date { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.camp-date:has(input:checked) { border-color: var(--accent); }
+.camp-date input { width: auto; accent-color: var(--accent); }
+.camp-link { display: inline-block; text-decoration: none; }
+.camp-roster summary { cursor: pointer; font-weight: 700; }
+.camp-roster li { margin-bottom: 8px; }
+@media (max-width: 560px) {
+  .camp-panel .input-grid { grid-template-columns: 1fr; }
+}
+.camp-panel [hidden] { display: none; }

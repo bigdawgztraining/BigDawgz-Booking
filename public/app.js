@@ -249,17 +249,20 @@ function render() {
 }
 
 function renderServiceStep() {
-  stepContent.innerHTML = choiceGrid(
-    services.map((service) =>
-      choiceMarkup({
-        title: service.title,
-        copy: service.copy,
-        selected: formState.service === service.id,
-        onClick: `selectService('${service.id}', ${service.durationMinutes})`
-      })
-    ),
-    2
+  const campChoice = `
+    <a class="choice camp-link" href="/winter-camp">
+      <span class="choice-title">Winter Camp</span>
+      <span class="choice-copy">Book one or both December 2026 camp dates.</span>
+    </a>`;
+  const trainingChoices = services.map((service) =>
+    choiceMarkup({
+      title: service.title,
+      copy: service.copy,
+      selected: formState.service === service.id,
+      onClick: `selectService('${service.id}', ${service.durationMinutes})`
+    })
   );
+  stepContent.innerHTML = choiceGrid([campChoice, ...trainingChoices], 2);
 }
 
 function renderTrainerStep() {

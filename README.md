@@ -72,3 +72,13 @@ The admin page supports:
 - Store client history in a database
 - Add deposits or package logic if the business needs it
 # BigDawgz-Booking
+
+## December 2026 winter camp
+
+Families can book at `/winter-camp`. Staff can see registrations and payment choices
+under **Winter camp roster** in `/admin`. Venmo payments are completed on Venmo
+and reconciled manually.
+
+Camp registrations contain contact information and are stored on the server's
+filesystem. Set `WINTER_CAMP_DATA_DIR` to a private, persistent directory in
+production. The local default is `data/winter-camp`. Keep these records out of Git.
